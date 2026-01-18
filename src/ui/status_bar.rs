@@ -44,8 +44,16 @@ pub fn render_status_bar(app: &App, frame: &mut Frame, area: Rect) {
         }
     };
 
+    // Sandbox indicator
+    let sandbox_indicator = if app.directory.sandbox_enabled {
+        Span::styled(" [SANDBOX] ", Style::default().fg(Color::Black).bg(Color::Magenta))
+    } else {
+        Span::raw("")
+    };
+
     let status_line = Line::from(vec![
         Span::styled(format!(" {} ", mode_str), mode_style),
+        sandbox_indicator,
         Span::styled(" ", Style::default()),
         Span::styled(item_name, Style::default().fg(Color::White)),
         Span::styled(" | ", Style::default().fg(Color::DarkGray)),

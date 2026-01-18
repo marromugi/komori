@@ -46,12 +46,12 @@ pub struct App {
 
 impl App {
     /// Create a new application.
-    pub fn new(path: &Path) -> color_eyre::Result<Self> {
+    pub fn new(path: &Path, sandbox_enabled: bool) -> color_eyre::Result<Self> {
         Ok(Self {
             should_quit: false,
             mode: Mode::Normal,
             view: View::Directory,
-            directory: Directory::new(path)?,
+            directory: Directory::new(path, sandbox_enabled)?,
             preview: Preview::new(),
             search_query: String::new(),
             filtered_indices: Vec::new(),

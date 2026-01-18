@@ -1,18 +1,18 @@
 mod action;
 mod app;
+mod config;
 mod directory;
 mod event;
 mod preview;
 mod tui;
 mod ui;
 
-use std::env;
-use std::path::PathBuf;
 use std::time::Duration;
 
 use color_eyre::Result;
 
 use app::App;
+use config::Config;
 use event::{Event, EventHandler};
 
 #[tokio::main]
@@ -20,17 +20,14 @@ async fn main() -> Result<()> {
     // Initialize error handling
     color_eyre::install()?;
 
-    // Get starting directory from args or use current directory
-    let start_dir = env::args()
-        .nth(1)
-        .map(PathBuf::from)
-        .unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
+    // Load configuration (CLI + config file)
+    let config = Config::load()?;
 
     // Initialize terminal
     let mut terminal = tui::init()?;
 
     // Create app and event handler
-    let mut app = App::new(&start_dir)?;
+    let mut app = App::new(&config.start_dir, config.sandbox_enabled)?;
     let mut events = EventHandler::new(Duration::from_millis(250));
 
     // Main loop

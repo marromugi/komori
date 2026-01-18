@@ -27,6 +27,10 @@ impl DirEntry {
 pub struct Directory {
     /// Current directory path.
     pub current_dir: PathBuf,
+    /// The directory where navigation is sandboxed - cannot go above this.
+    pub sandbox_root: PathBuf,
+    /// Whether sandbox mode is enabled.
+    pub sandbox_enabled: bool,
     /// Entries in the current directory.
     pub entries: Vec<DirEntry>,
     /// Currently selected index.
@@ -37,10 +41,12 @@ pub struct Directory {
 
 impl Directory {
     /// Create a new directory listing for the given path.
-    pub fn new(path: &Path) -> color_eyre::Result<Self> {
+    pub fn new(path: &Path, sandbox_enabled: bool) -> color_eyre::Result<Self> {
         let current_dir = path.canonicalize()?;
         let mut dir = Self {
-            current_dir,
+            current_dir: current_dir.clone(),
+            sandbox_root: current_dir,
+            sandbox_enabled,
             entries: Vec::new(),
             selected: 0,
             scroll_offset: 0,
@@ -49,12 +55,17 @@ impl Directory {
         Ok(dir)
     }
 
+    /// Returns true if at sandbox root and sandbox is enabled.
+    pub fn is_at_sandbox_root(&self) -> bool {
+        self.sandbox_enabled && self.current_dir == self.sandbox_root
+    }
+
     /// Reload the directory contents.
     pub fn reload(&mut self) -> color_eyre::Result<()> {
         self.entries.clear();
 
-        // Add parent directory entry if not at root
-        if self.current_dir.parent().is_some() {
+        // Add parent directory entry if not at sandbox root
+        if self.current_dir.parent().is_some() && !self.is_at_sandbox_root() {
             self.entries.push(DirEntry::parent());
         }
 
@@ -128,12 +139,14 @@ impl Directory {
         if entry.is_dir {
             // Navigate into directory
             if entry.name == "../" {
-                // Go to parent
-                if let Some(parent) = self.current_dir.parent() {
-                    self.current_dir = parent.to_path_buf();
-                    self.selected = 0;
-                    self.scroll_offset = 0;
-                    self.reload()?;
+                // Go to parent (respects sandbox)
+                if !self.is_at_sandbox_root() {
+                    if let Some(parent) = self.current_dir.parent() {
+                        self.current_dir = parent.to_path_buf();
+                        self.selected = 0;
+                        self.scroll_offset = 0;
+                        self.reload()?;
+                    }
                 }
             } else {
                 // Go into subdirectory
@@ -151,6 +164,9 @@ impl Directory {
 
     /// Go to parent directory.
     pub fn go_back(&mut self) -> color_eyre::Result<()> {
+        if self.is_at_sandbox_root() {
+            return Ok(());
+        }
         if let Some(parent) = self.current_dir.parent() {
             self.current_dir = parent.to_path_buf();
             self.selected = 0;
