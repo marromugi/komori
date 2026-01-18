@@ -13,6 +13,8 @@ pub enum Event {
     Key(KeyEvent),
     /// Terminal resize event.
     Resize(u16, u16),
+    /// Paste event (from drag & drop or clipboard).
+    Paste(String),
 }
 
 /// Handles terminal events asynchronously.
@@ -46,6 +48,9 @@ impl EventHandler {
                             }
                             CrosstermEvent::Resize(w, h) => {
                                 tx.send(Event::Resize(w, h)).ok();
+                            }
+                            CrosstermEvent::Paste(content) => {
+                                tx.send(Event::Paste(content)).ok();
                             }
                             _ => {}
                         }

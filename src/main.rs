@@ -42,6 +42,10 @@ async fn main() -> Result<()> {
                     let action = app.handle_key(key);
                     app.execute(action)?;
                 }
+                Event::Paste(content) => {
+                    let action = app.handle_paste(content);
+                    app.execute(action)?;
+                }
                 Event::Resize(_, _) => {
                     // Terminal will redraw on next iteration
                 }

@@ -1,6 +1,8 @@
 /// Actions that can be performed in the application.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
+    /// Copy file from pasted path to current directory.
+    CopyFile(String),
     /// Move selection down.
     MoveDown,
     /// Move selection up.

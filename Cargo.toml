@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 # TUI Framework
 ratatui = "0.30"
-crossterm = { version = "0.28", features = ["event-stream"] }
+crossterm = { version = "0.28", features = ["event-stream", "bracketed-paste"] }
 
 # Async Runtime
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
